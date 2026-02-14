@@ -368,23 +368,35 @@
             });
             
             // ========== 云端数据操作（GitHub Gist 免费跨设备同步） ==========
-            // 获取所有云端心愿
-            async function getAllCloudWishes() {
-                try {
-                    const res = await fetch(GIST_API_URL, {
-                        headers: {
-                            'Authorization': `token ${GITHUB_TOKEN}`,
-                            'Accept': 'application/vnd.github.v3+json'
-                        }
-                    });
-                    const data = await res.json();
-                    const content = JSON.parse(data.files['wish-collection.json'].content);
-                    return { success: true, data: content };
-                } catch (e) {
-                    console.error('获取云端心愿失败:', e);
-                    return { success: false, msg: e.message };
-                }
+           // 获取所有云端心愿
+async function getAllCloudWishes() {
+    try {
+        const res = await fetch(GIST_API_URL, {
+            headers: {
+                'Authorization': `token ${GITHUB_TOKEN}`,
+                'Accept': 'application/vnd.github.v3+json'
             }
+        });
+        
+        // 新增：检查请求是否成功
+        if (!res.ok) {
+            throw new Error(`请求失败，状态码：${res.status}`);
+        }
+        
+        const data = await res.json();
+        
+        // 新增：防止data/files不存在导致undefined报错
+        if (!data || !data.files || !data.files['wish-collection.json']) {
+            throw new Error('Gist数据格式错误或文件不存在');
+        }
+        
+        const content = JSON.parse(data.files['wish-collection.json'].content);
+        return { success: true, data: content };
+    } catch (e) {
+        console.error('获取云端心愿失败:', e);
+        return { success: false, msg: e.message };
+    }
+}
             
             // 获取当前用户已提交的心愿
             async function getCurrentUserWish() {
